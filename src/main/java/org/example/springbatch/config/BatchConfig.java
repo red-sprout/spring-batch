@@ -1,0 +1,47 @@
+package org.example.springbatch.config;
+
+import org.springframework.batch.core.configuration.support.JdbcDefaultBatchConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import javax.sql.DataSource;
+
+@Configuration
+public class BatchConfig extends JdbcDefaultBatchConfiguration {
+
+    @Autowired
+    @Qualifier("metaDBSource")
+    private DataSource metaDBSource;
+
+    @Autowired
+    @Qualifier("metaTransactionManager")
+    private PlatformTransactionManager metaTransactionManager;
+
+    @Override
+    protected DataSource getDataSource() {
+        return metaDBSource;
+    }
+
+    @Override
+    protected PlatformTransactionManager getTransactionManager() {
+        return metaTransactionManager;
+    }
+
+    @Bean
+    public DataSourceInitializer batchSchemaInitializer() {
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        populator.addScript(new ClassPathResource("org/springframework/batch/core/schema-mysql.sql"));
+        populator.setContinueOnError(true);
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(metaDBSource);
+        initializer.setDatabasePopulator(populator);
+        return initializer;
+    }
+}
