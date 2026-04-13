@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: spring-batch
+  batch:
+    job:
+      enabled: false
+  config:
+    import: classpath:secret.yml
