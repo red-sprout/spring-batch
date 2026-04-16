@@ -19,19 +19,22 @@ public class MainController {
     private final Job secondJob;
     private final Job excelJob;
     private final Job jdbcJob;
+    private final Job mongoJob;
 
     public MainController(
             JobOperator jobOperator,
             @Qualifier("firstJob") Job firstJob,
             @Qualifier("secondJob") Job secondJob,
             @Qualifier("excelJob") Job excelJob,
-            @Qualifier("jdbcJob") Job jdbcJob
+            @Qualifier("jdbcJob") Job jdbcJob,
+            @Qualifier("mongoJob") Job mongoJob
     ) {
         this.jobOperator = jobOperator;
         this.firstJob = firstJob;
         this.secondJob = secondJob;
         this.excelJob = excelJob;
         this.jdbcJob = jdbcJob;
+        this.mongoJob = mongoJob;
     }
 
     @GetMapping("/first")
@@ -75,6 +78,16 @@ public class MainController {
                 .toJobParameters();
 
         jobOperator.start(jdbcJob, jobParameters);
+        return "ok";
+    }
+
+    @GetMapping("/mongo")
+    public String mongoApi(@RequestParam("value") String value) throws Exception {
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("date", value)
+                .toJobParameters();
+
+        jobOperator.start(mongoJob, jobParameters);
         return "ok";
     }
 }

@@ -82,6 +82,11 @@ Job / Step / Reader / Processor / Writer 정의에 집중.
 `WinEntity`를 읽어 `win >= 10`인 레코드의 `reward` 필드를 `true`로 업데이트한다.
 `RepositoryItemReader`로 조건 쿼리, `RepositoryItemWriter`로 저장한다.
 
+### MongoBatch
+`MongoPagingItemReader`로 `person_in` 컬렉션을 읽어 `person_out` 컬렉션에 저장하는 MongoDB 기반 Job.
+`MongoTemplate`을 `@RequiredArgsConstructor`로 주입받는다.
+`jsonQuery("{}")`로 전체 도큐먼트를 읽고 `name` 기준 내림차순 정렬한다.
+
 ### JdbcBatch
 `customerCredit` 테이블에서 `credit > :credit` 조건으로 데이터를 읽어 credit을 10% 인상 후 업데이트하는 JDBC 기반 Job.
 `dataDBSource`를 명시적 생성자 주입으로 받는다.
@@ -97,3 +102,4 @@ Job / Step / Reader / Processor / Writer 정의에 집중.
 | `RepositoryItemReader` | JPA / 페이징 | 청크마다 새 트랜잭션 | ✅ | `beforeReader`, `winReader` |
 | `JdbcCursorItemReader` | SQL / 커서 스트리밍 | Step 내내 단일 커넥션 유지 | ⚠️ (커서 재오픈 필요) | `jdbcCursorItemReader` (참고용) |
 | `JdbcPagingItemReader` | SQL / 오프셋 페이징 | 청크마다 새 쿼리 | ✅ | `jdbcPagingItemReader` |
+| `MongoPagingItemReader` | MongoDB / 페이징 | 청크마다 새 쿼리 | ✅ | `mongoPagingItemReader` |
