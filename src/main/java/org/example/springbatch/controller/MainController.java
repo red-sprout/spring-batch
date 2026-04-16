@@ -17,14 +17,18 @@ public class MainController {
     private final JobOperator jobOperator;
     private final Job firstJob;
     private final Job secondJob;
+    private final Job excelJob;
 
     public MainController(
             JobOperator jobOperator,
             @Qualifier("firstJob") Job firstJob,
-            @Qualifier("secondJob") Job secondJob) {
+            @Qualifier("secondJob") Job secondJob,
+            @Qualifier("excelJob") Job excelJob
+    ) {
         this.jobOperator = jobOperator;
         this.firstJob = firstJob;
         this.secondJob = secondJob;
+        this.excelJob = excelJob;
     }
 
     @GetMapping("/first")
@@ -44,6 +48,16 @@ public class MainController {
                 .toJobParameters();
 
         jobOperator.start(secondJob, jobParameters);
+        return "ok";
+    }
+
+    @GetMapping("/excel")
+    public String excelApi(@RequestParam("value") String value) throws Exception {
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("date", value)
+                .toJobParameters();
+
+        jobOperator.start(excelJob, jobParameters);
         return "ok";
     }
 }

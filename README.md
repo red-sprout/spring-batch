@@ -9,6 +9,7 @@ Spring Batch를 알아보자!
 - Spring Batch
 - Spring Data JPA
 - MySQL
+- Apache POI (Excel 처리)
 
 ## 프로젝트 설정
 
@@ -45,8 +46,29 @@ CREATE DATABASE meta_db;
 CREATE DATABASE data_db;
 ```
 
-### 3. 실행
+### 3. Excel 파일 준비
+
+Excel Job은 `src/main/resources/files/` 경로의 파일을 읽습니다.  
+해당 디렉토리에 처리할 `.xlsx` 파일을 위치시키세요.
+
+```
+src/main/resources/files/Book.xlsx
+```
+
+### 4. 실행
 
 ```bash
 ./gradlew bootRun
 ```
+
+---
+
+## API
+
+| 엔드포인트 | Job | 설명 |
+|---|---|---|
+| `GET /first?value=` | firstJob | before_entity → after_entity 마이그레이션 |
+| `GET /second?value=` | secondJob | - |
+| `GET /excel?value=` | excelJob | Excel 파일 읽기 처리 |
+
+`value`는 Job 중복 실행 방지를 위한 고유 식별자로 매 호출마다 다른 값을 사용해야 합니다.

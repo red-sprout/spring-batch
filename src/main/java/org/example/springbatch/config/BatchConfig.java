@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.transaction.annotation.Isolation;
 
 import javax.sql.DataSource;
 
@@ -15,7 +16,8 @@ import javax.sql.DataSource;
 @EnableBatchProcessing
 @EnableJdbcJobRepository(
         dataSourceRef = "metaDBSource",
-        transactionManagerRef = "metaTransactionManager"
+        transactionManagerRef = "metaTransactionManager",
+        isolationLevelForCreate = Isolation.DEFAULT
 )
 public class BatchConfig {
 
