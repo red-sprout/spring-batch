@@ -20,6 +20,7 @@ public class MainController {
     private final Job excelJob;
     private final Job jdbcJob;
     private final Job mongoJob;
+    private final Job excelExportJob;
 
     public MainController(
             JobOperator jobOperator,
@@ -27,7 +28,8 @@ public class MainController {
             @Qualifier("secondJob") Job secondJob,
             @Qualifier("excelJob") Job excelJob,
             @Qualifier("jdbcJob") Job jdbcJob,
-            @Qualifier("mongoJob") Job mongoJob
+            @Qualifier("mongoJob") Job mongoJob,
+            @Qualifier("excelExportJob") Job excelExportJob
     ) {
         this.jobOperator = jobOperator;
         this.firstJob = firstJob;
@@ -35,6 +37,7 @@ public class MainController {
         this.excelJob = excelJob;
         this.jdbcJob = jdbcJob;
         this.mongoJob = mongoJob;
+        this.excelExportJob = excelExportJob;
     }
 
     @GetMapping("/first")
@@ -88,6 +91,16 @@ public class MainController {
                 .toJobParameters();
 
         jobOperator.start(mongoJob, jobParameters);
+        return "ok";
+    }
+
+    @GetMapping("/excel-export")
+    public String excelExportApi(@RequestParam("value") String value) throws Exception {
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("date", value)
+                .toJobParameters();
+
+        jobOperator.start(excelExportJob, jobParameters);
         return "ok";
     }
 }

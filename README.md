@@ -9,6 +9,7 @@ Spring Batch를 알아보자!
 - Spring Batch
 - Spring Data JPA
 - MySQL
+- MongoDB
 - Apache POI (Excel 처리)
 
 ## 프로젝트 설정
@@ -82,6 +83,19 @@ Excel Job은 `src/main/resources/files/` 경로의 파일을 읽습니다.
 src/main/resources/files/Book.xlsx
 ```
 
+Excel Export Job은 `before_entity` 데이터를 읽어 프로젝트 루트의 `output/` 경로에 파일을 생성합니다.
+파일명은 실행 시점 기준 timestamp가 붙습니다.
+
+```
+output/result-yyyyMMdd-HHmmss.xlsx
+```
+
+예시:
+
+```
+output/result-20260416-231540.xlsx
+```
+
 ### 5. 실행
 
 ```bash
@@ -99,5 +113,6 @@ src/main/resources/files/Book.xlsx
 | `GET /excel?value=` | excelJob | Excel 파일 읽기 처리 (ExcelRowReader) |
 | `GET /jdbc?value=&credit=` | jdbcJob | customer_credit credit 업데이트 (JdbcPagingItemReader + JdbcBatchItemWriter, @StepScope) |
 | `GET /mongo?value=` | mongoJob | person_in → person_out 마이그레이션 (MongoPagingItemReader + MongoItemWriter) |
+| `GET /excel-export?value=` | excelExportJob | before_entity → timestamp 기반 result.xlsx 내보내기 (RepositoryItemReader + ExcelRowWriter) |
 
 `value`는 Job 중복 실행 방지를 위한 고유 식별자로 매 호출마다 다른 값을 사용해야 합니다.

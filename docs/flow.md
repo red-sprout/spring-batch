@@ -82,6 +82,11 @@ Job / Step / Reader / Processor / Writer 정의에 집중.
 `WinEntity`를 읽어 `win >= 10`인 레코드의 `reward` 필드를 `true`로 업데이트한다.
 `RepositoryItemReader`로 조건 쿼리, `RepositoryItemWriter`로 저장한다.
 
+### ExcelExportBatch
+`before_entity`를 읽어 `result.xlsx`로 내보내는 Excel 내보내기 Job.
+`RepositoryItemReader`로 읽고, `ExcelRowWriter`로 classpath 기반 경로에 파일을 생성한다.
+`ExcelRowWriter`는 `ExcelRowReader`와 동일하게 `classpath:` 분기를 지원한다.
+
 ### MongoBatch
 `MongoPagingItemReader`로 `person_in` 컬렉션을 읽어 `person_out` 컬렉션에 저장하는 MongoDB 기반 Job.
 `MongoTemplate`을 `@RequiredArgsConstructor`로 주입받는다.
