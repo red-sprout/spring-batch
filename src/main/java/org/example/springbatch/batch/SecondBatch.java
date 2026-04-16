@@ -1,10 +1,8 @@
 package org.example.springbatch.batch;
 
 import lombok.RequiredArgsConstructor;
-import org.example.springbatch.entity.AfterEntity;
-import org.example.springbatch.entity.BeforeEntity;
-import org.example.springbatch.repository.AfterRepository;
-import org.example.springbatch.repository.BeforeRepository;
+import org.example.springbatch.entity.WinEntity;
+import org.example.springbatch.repository.WinRepository;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
@@ -21,60 +19,60 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.util.Collections;
 import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class FirstBatch {
+public class SecondBatch {
 
-    private final BeforeRepository beforeRepository;
-    private final AfterRepository afterRepository;
+    private final WinRepository winRepository;
 
     @Bean
-    public Job firstJob(JobRepository jobRepository, Step firstStep) {
-        return new JobBuilder("firstJob", jobRepository)
-                .start(firstStep)
+    public Job secondJob(JobRepository jobRepository, Step secondStep) {
+        return new JobBuilder("secondJob", jobRepository)
+                .start(secondStep)
                 .build();
     }
 
     @Bean
-    public Step firstStep(
+    public Step secondStep(
             JobRepository jobRepository,
             @Qualifier("dataTransactionManager") PlatformTransactionManager dataTransactionManager
     ) {
-        return new StepBuilder("firstStep", jobRepository)
-                .<BeforeEntity, AfterEntity> chunk(10)
+        return new StepBuilder("secondStep", jobRepository)
+                .<WinEntity, WinEntity> chunk(10)
                 .transactionManager(dataTransactionManager)
-                .reader(beforeReader())
-                .processor(beforeProcessor())
-                .writer(afterWriter())
+                .reader(winReader())
+                .processor(trueProcessor())
+                .writer(winWriter())
                 .build();
     }
 
     @Bean
-    public RepositoryItemReader<BeforeEntity> beforeReader() {
-        return new RepositoryItemReaderBuilder<BeforeEntity>()
-                .name("beforeReader")
-                .repository(beforeRepository)
-                .methodName("findAll")
+    public RepositoryItemReader<WinEntity> winReader() {
+        return new RepositoryItemReaderBuilder<WinEntity>()
+                .name("winReader")
                 .pageSize(10)
+                .methodName("findByWinGreaterThanEqual")
+                .arguments(Collections.singletonList(10L))
+                .repository(winRepository)
                 .sorts(Map.of("id", Sort.Direction.ASC))
                 .build();
     }
 
     @Bean
-    public ItemProcessor<BeforeEntity, AfterEntity> beforeProcessor() {
-        return before -> {
-            AfterEntity after = new AfterEntity();
-            after.setUsername(before.getUsername());
-            return after;
+    public ItemProcessor<WinEntity, WinEntity> trueProcessor() {
+        return item -> {
+            item.setReward(true);
+            return item;
         };
     }
 
     @Bean
-    public RepositoryItemWriter<AfterEntity> afterWriter() {
-        return new RepositoryItemWriterBuilder<AfterEntity>()
-                .repository(afterRepository)
+    public RepositoryItemWriter<WinEntity> winWriter() {
+        return new RepositoryItemWriterBuilder<WinEntity>()
+                .repository(winRepository)
                 .build();
     }
 }

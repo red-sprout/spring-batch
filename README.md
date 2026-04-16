@@ -32,6 +32,10 @@ spring:
     jdbc-url: jdbc:mysql://127.0.0.1:3306/data_db?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: your_username
     password: your_password
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 운영 환경에서는 validate 또는 none으로 변경
 ```
 
 ### 2. DB 생성

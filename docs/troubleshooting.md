@@ -108,7 +108,67 @@ jobOperator.start(job, jobParameters);
 
 ---
 
-## 6. TransactionManager 불일치로 AfterEntity 저장 안 됨
+## 6. HibernateJpaVendorAdapter 사용 시 spring.jpa.* 속성 미적용
+
+**문제**
+`application.yml`의 `spring.jpa.hibernate.ddl-auto` 설정이 커스텀 EntityManager에 반영되지 않아
+data_db 테이블이 자동 생성되지 않음.
+
+**원인**
+`spring.jpa.*` 속성은 Spring Boot가 자동 구성하는 `EntityManagerFactory`에만 적용됨.
+`HibernateJpaVendorAdapter`를 직접 사용하는 커스텀 `LocalContainerEntityManagerFactoryBean`은
+Spring Boot의 JPA 자동 구성 흐름을 타지 않아 해당 속성을 읽지 못함.
+
+**해결**
+`setJpaProperties()`로 직접 전달하되, 값은 `@Value`로 yml에서 주입.
+환경별로 다른 값(`update` / `validate` / `none`)을 설정할 수 있도록 `secret.yml`에서 관리.
+
+```java
+// DataDBConfig.java
+@Value("${spring.jpa.hibernate.ddl-auto:none}")  // 미설정 시 none (운영 안전)
+private String ddlAuto;
+
+Properties properties = new Properties();
+properties.put("hibernate.hbm2ddl.auto", ddlAuto);
+em.setJpaProperties(properties);
+```
+
+```yaml
+# secret.yml — 환경별로 다르게 설정
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update   # 운영: validate 또는 none
+```
+
+---
+
+## 7. API 호출 시 value 파라미터가 필수인 이유
+
+**궁금증**
+`GET /first?value=a` 처럼 매번 `value`를 넘겨야 하는 이유는?
+파라미터 없이 `/first`만 호출하면 안 되나?
+
+**원인**
+Spring Batch는 `jobName + JobParameters` 조합으로 `JobInstance`를 식별한다.
+동일한 조합으로 이미 `COMPLETED`된 `JobInstance`가 존재하면 재실행을 거부한다.
+
+파라미터를 아예 넘기지 않으면 첫 번째 실행 성공 이후 해당 Job은 **영구적으로 재실행 불가** 상태가 된다.
+`value`(→ `date` 파라미터)를 매번 다른 값으로 넘겨 새로운 `JobInstance`를 생성하는 것이 목적이다.
+
+```
+JobInstance = "firstJob" + {date=a}  → 최초 실행, COMPLETED
+JobInstance = "firstJob" + {date=a}  → 재실행 거부 (이미 완료된 인스턴스)
+JobInstance = "firstJob" + {date=b}  → 새 인스턴스 생성, 실행 가능
+```
+
+**스케줄러에서는**
+`FirstSchedule`이 `yyyy-MM-dd-hh-mm-ss` 형식의 현재 시각을 `date`로 넣어
+매 실행마다 자동으로 고유한 파라미터를 생성한다.
+
+---
+
+## 8. TransactionManager 불일치로 AfterEntity 저장 안 됨
 
 **문제**
 `after_entity` 테이블에 데이터가 저장되지 않음 (0행).

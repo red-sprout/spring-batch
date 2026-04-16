@@ -8,8 +8,6 @@ spring:
       initialize-schema: always
       schema: classpath:org/springframework/batch/core/schema-mysql.sql
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: true
   config:
     import: classpath:secret.yml

@@ -1,5 +1,6 @@
 package org.example.springbatch.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
 @EnableJpaRepositories(
@@ -19,6 +21,9 @@ import javax.sql.DataSource;
         transactionManagerRef = "dataTransactionManager"
 )
 public class DataDBConfig {
+
+    @Value("${spring.jpa.hibernate.ddl-auto:none}")
+    private String ddlAuto;
 
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource-data")
@@ -33,6 +38,10 @@ public class DataDBConfig {
         em.setDataSource(dataDBSource());
         em.setPackagesToScan("org.example.springbatch.entity");
         em.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+
+        Properties properties = new Properties();
+        properties.put("hibernate.hbm2ddl.auto", ddlAuto);
+        em.setJpaProperties(properties);
 
         return em;
     }

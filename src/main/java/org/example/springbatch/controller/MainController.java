@@ -15,11 +15,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class MainController {
 
     private final JobOperator jobOperator;
-    private final Job job;
+    private final Job firstJob;
+    private final Job secondJob;
 
-    public MainController(JobOperator jobOperator, @Qualifier("firstJob") Job job) {
+    public MainController(
+            JobOperator jobOperator,
+            @Qualifier("firstJob") Job firstJob,
+            @Qualifier("secondJob") Job secondJob) {
         this.jobOperator = jobOperator;
-        this.job = job;
+        this.firstJob = firstJob;
+        this.secondJob = secondJob;
     }
 
     @GetMapping("/first")
@@ -28,7 +33,17 @@ public class MainController {
                 .addString("date", value)
                 .toJobParameters();
 
-        jobOperator.start(job, jobParameters);
+        jobOperator.start(firstJob, jobParameters);
+        return "ok";
+    }
+
+    @GetMapping("/second")
+    public String secondApi(@RequestParam("value") String value) throws Exception {
+        JobParameters jobParameters = new JobParametersBuilder()
+                .addString("date", value)
+                .toJobParameters();
+
+        jobOperator.start(secondJob, jobParameters);
         return "ok";
     }
 }
