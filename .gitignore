@@ -1,4 +1,6 @@
 HELP.md
+CLAUDE.md
+prompt.md
 **/src/main/resources/secret.yml
 .gradle
 build/

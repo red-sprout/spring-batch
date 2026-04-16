@@ -14,6 +14,7 @@ import org.springframework.batch.infrastructure.item.data.RepositoryItemReader;
 import org.springframework.batch.infrastructure.item.data.RepositoryItemWriter;
 import org.springframework.batch.infrastructure.item.data.builder.RepositoryItemReaderBuilder;
 import org.springframework.batch.infrastructure.item.data.builder.RepositoryItemWriterBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
@@ -24,35 +25,31 @@ import java.util.Map;
 @Configuration
 public class FirstBatch {
 
-    private final JobRepository jobRepository;
-    private final PlatformTransactionManager platformTransactionManager;
-
     private final BeforeRepository beforeRepository;
     private final AfterRepository afterRepository;
 
-    public FirstBatch(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, BeforeRepository beforeRepository, AfterRepository afterRepository) {
-        this.jobRepository = jobRepository;
-        this.platformTransactionManager = platformTransactionManager;
+    public FirstBatch(BeforeRepository beforeRepository, AfterRepository afterRepository) {
         this.beforeRepository = beforeRepository;
         this.afterRepository = afterRepository;
     }
 
     @Bean
-    public Job firstJob() {
-        System.out.println("first job");
+    public Job firstJob(JobRepository jobRepository, Step firstStep) {
         return new JobBuilder("firstJob", jobRepository)
-                .start(firstStep())
+                .start(firstStep)
                 .build();
     }
 
     @Bean
-    public Step firstStep() {
-        System.out.println("first step");
+    public Step firstStep(
+            JobRepository jobRepository,
+            @Qualifier("dataTransactionManager") PlatformTransactionManager dataTransactionManager
+    ) {
         return new StepBuilder("firstStep", jobRepository)
                 .<BeforeEntity, AfterEntity> chunk(10)
-                .transactionManager(platformTransactionManager)
+                .transactionManager(dataTransactionManager)
                 .reader(beforeReader())
-                .processor(middleProcessor())
+                .processor(beforeProcessor())
                 .writer(afterWriter())
                 .build();
     }
@@ -61,22 +58,19 @@ public class FirstBatch {
     public RepositoryItemReader<BeforeEntity> beforeReader() {
         return new RepositoryItemReaderBuilder<BeforeEntity>()
                 .name("beforeReader")
-                .pageSize(10)
-                .methodName("findAll")
                 .repository(beforeRepository)
+                .methodName("findAll")
+                .pageSize(10)
                 .sorts(Map.of("id", Sort.Direction.ASC))
                 .build();
     }
 
     @Bean
-    public ItemProcessor<BeforeEntity, AfterEntity> middleProcessor() {
-        return new ItemProcessor<BeforeEntity, AfterEntity>() {
-            @Override
-            public AfterEntity process(BeforeEntity item) throws Exception {
-                AfterEntity afterEntity = new AfterEntity();
-                afterEntity.setUsername(item.getUsername());
-                return afterEntity;
-            }
+    public ItemProcessor<BeforeEntity, AfterEntity> beforeProcessor() {
+        return before -> {
+            AfterEntity after = new AfterEntity();
+            after.setUsername(before.getUsername());
+            return after;
         };
     }
 
@@ -84,7 +78,6 @@ public class FirstBatch {
     public RepositoryItemWriter<AfterEntity> afterWriter() {
         return new RepositoryItemWriterBuilder<AfterEntity>()
                 .repository(afterRepository)
-                .methodName("save")
                 .build();
     }
 }

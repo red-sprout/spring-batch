@@ -1,25 +1,25 @@
 package org.example.springbatch.schedule;
 
-import org.springframework.batch.core.configuration.JobRegistry;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
 import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
 
 @Configuration
 public class FirstSchedule {
 
     private final JobOperator jobOperator;
-    private final JobRegistry jobRegistry;
+    private final Job job;
 
-    public FirstSchedule(JobOperator jobOperator, JobRegistry jobRegistry) {
+    public FirstSchedule(JobOperator jobOperator, @Qualifier("firstJob") Job job) {
         this.jobOperator = jobOperator;
-        this.jobRegistry = jobRegistry;
+        this.job = job;
     }
 
     @Scheduled(cron = "10 * * * * *", zone = "Asia/Seoul")
@@ -33,6 +33,6 @@ public class FirstSchedule {
                 .addString("date", date)
                 .toJobParameters();
 
-        jobOperator.start(Objects.requireNonNull(jobRegistry.getJob("firstJob")), jobParameters);
+        jobOperator.start(job, jobParameters);
     }
 }
