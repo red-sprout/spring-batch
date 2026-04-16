@@ -163,7 +163,7 @@ JobInstance = "firstJob" + {date=b}  → 새 인스턴스 생성, 실행 가능
 ```
 
 **스케줄러에서는**
-`FirstSchedule`이 `yyyy-MM-dd-hh-mm-ss` 형식의 현재 시각을 `date`로 넣어
+`FirstSchedule`이 `yyyy-MM-dd-HH-mm-ss` 형식의 현재 시각을 `date`로 넣어
 매 실행마다 자동으로 고유한 파라미터를 생성한다.
 
 ---
@@ -191,4 +191,48 @@ public FirstBatch(JobRepository jobRepository, PlatformTransactionManager platfo
 public Step firstStep(
         JobRepository jobRepository,
         @Qualifier("dataTransactionManager") PlatformTransactionManager dataTransactionManager) { ... }
+```
+
+---
+
+## 9. FirstSchedule JobInstanceAlreadyCompleteException
+
+**문제**
+`FirstSchedule`에서 `JobInstanceAlreadyCompleteException` 발생.
+
+**원인**
+`SimpleDateFormat("yyyy-MM-dd-hh-mm-ss")`에서 `hh`는 12시간제(01~12)다.
+오전 10시와 오후 10시에 동일한 문자열이 생성되어 같은 `JobInstance`로 인식된다.
+
+**해결**
+`HH`(24시간제)로 변경해 시각 충돌 제거.
+
+```java
+// 변경 전
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+
+// 변경 후
+SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+```
+
+---
+
+## 10. jdbcJob credit 파라미터와 JobInstanceAlreadyCompleteException
+
+**문제**
+`/jdbc?value=a&credit=500` 호출 후 동일 URL 재호출 시 `JobInstanceAlreadyCompleteException` 발생.
+
+**원인**
+`addLong("credit", credit)`로 추가된 파라미터는 기본적으로 identifying이라
+`date=a, credit=500` 조합이 이미 완료된 JobInstance와 충돌한다.
+
+**동작**
+`jdbcJob`의 JobInstance는 `date + credit` 두 파라미터 조합으로 식별된다.
+재실행하려면 `value` 또는 `credit` 중 하나를 다른 값으로 변경해야 한다.
+
+```
+JobInstance = "jdbcJob" + {date=a, credit=500}  → 최초 실행, COMPLETED
+JobInstance = "jdbcJob" + {date=a, credit=500}  → 재실행 거부
+JobInstance = "jdbcJob" + {date=b, credit=500}  → 새 인스턴스, 실행 가능
+JobInstance = "jdbcJob" + {date=a, credit=600}  → 새 인스턴스, 실행 가능
 ```

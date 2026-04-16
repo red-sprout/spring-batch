@@ -67,8 +67,9 @@ src/main/resources/files/Book.xlsx
 
 | 엔드포인트 | Job | 설명 |
 |---|---|---|
-| `GET /first?value=` | firstJob | before_entity → after_entity 마이그레이션 |
-| `GET /second?value=` | secondJob | - |
-| `GET /excel?value=` | excelJob | Excel 파일 읽기 처리 |
+| `GET /first?value=` | firstJob | before_entity → after_entity 마이그레이션 (RepositoryItemReader/Writer) |
+| `GET /second?value=` | secondJob | win >= 10 레코드 reward 업데이트 (RepositoryItemReader/Writer) |
+| `GET /excel?value=` | excelJob | Excel 파일 읽기 처리 (ExcelRowReader) |
+| `GET /jdbc?value=&credit=` | jdbcJob | customer_credit credit 업데이트 (JdbcPagingItemReader + JdbcBatchItemWriter, @StepScope) |
 
 `value`는 Job 중복 실행 방지를 위한 고유 식별자로 매 호출마다 다른 값을 사용해야 합니다.

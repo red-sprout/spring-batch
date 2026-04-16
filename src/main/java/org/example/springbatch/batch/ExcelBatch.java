@@ -28,8 +28,6 @@ public class ExcelBatch {
 
     @Bean
     public Job excelJob(JobRepository jobRepository, Step excelStep) {
-        System.out.println("fourth job");
-
         return new JobBuilder("excelJob", jobRepository)
                 .start(excelStep)
                 .build();

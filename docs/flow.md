@@ -77,3 +77,23 @@ Step의 트랜잭션은 이 설정의 `dataTransactionManager`(`JpaTransactionMa
 Job / Step / Reader / Processor / Writer 정의에 집중.
 `JobRepository`와 `PlatformTransactionManager`는 생성자가 아닌 각 `@Bean` 메서드 파라미터로 주입받는다.
 `firstStep()`에서 `@Qualifier("dataTransactionManager")`로 JPA 트랜잭션 매니저를 명시적으로 지정한다.
+
+### SecondBatch
+`WinEntity`를 읽어 `win >= 10`인 레코드의 `reward` 필드를 `true`로 업데이트한다.
+`RepositoryItemReader`로 조건 쿼리, `RepositoryItemWriter`로 저장한다.
+
+### JdbcBatch
+`customerCredit` 테이블에서 `credit > :credit` 조건으로 데이터를 읽어 credit을 10% 인상 후 업데이트하는 JDBC 기반 Job.
+`dataDBSource`를 명시적 생성자 주입으로 받는다.
+`JdbcPagingItemReader`에 `@StepScope` + `@Value("#{jobParameters['credit']}")`를 적용해 Job 파라미터를 동적으로 주입받는다.
+`JdbcCursorItemReader`는 커서 방식 참고 구현으로 함께 정의되어 있다.
+
+---
+
+## Reader 방식 비교
+
+| Reader 종류 | 방식 | 커넥션 | 재시작 안전 | 사용 빈 |
+|---|---|---|---|---|
+| `RepositoryItemReader` | JPA / 페이징 | 청크마다 새 트랜잭션 | ✅ | `beforeReader`, `winReader` |
+| `JdbcCursorItemReader` | SQL / 커서 스트리밍 | Step 내내 단일 커넥션 유지 | ⚠️ (커서 재오픈 필요) | `jdbcCursorItemReader` (참고용) |
+| `JdbcPagingItemReader` | SQL / 오프셋 페이징 | 청크마다 새 쿼리 | ✅ | `jdbcPagingItemReader` |
